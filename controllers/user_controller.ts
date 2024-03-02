@@ -1,5 +1,5 @@
 import { User } from "../models/user_model";
-import { client } from "../app.js";
+import { client } from "../app";
 import { Request, Response, NextFunction } from 'express';
 
 export default class UserController {

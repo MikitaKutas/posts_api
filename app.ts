@@ -1,7 +1,7 @@
 import express from 'express';
 import { MongoClient } from "mongodb";
 import cors from "cors";
-import { router } from './routes/router.js';
+import { router } from './routes/router';
 
 const app = express();
 app.use(cors());
