@@ -6,9 +6,9 @@ export default class UserController {
   async addUser(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.body as User;
-      const usersDb = client.db("posts_api").collection("users");
+      const usersCollection = client.db("posts_api").collection("users");
 
-      await usersDb.insertOne(user);
+      await usersCollection.insertOne(user);
 
       res.send({
         data: user,
@@ -21,8 +21,18 @@ export default class UserController {
 
   async get(req: Request, res: Response, next: NextFunction) {
     try {
-      const usersDb = client.db("posts_api").collection("users");
-      const usersArray = await usersDb.find(req.query).toArray();
+      const user: User = {};
+
+      if (req.query.name) {
+        user.name = req.query.name as string;
+      }
+
+      if (req.query.level) {
+        user.level = Number(req.query.level);
+      }
+
+      const usersCollection = client.db("posts_api").collection("users");
+      const usersArray = await usersCollection.find(user).toArray();
 
       res.send(usersArray);
     } catch (e) {
@@ -32,14 +42,23 @@ export default class UserController {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const usersDb = client.db("posts_api").collection("users");
-      const user = req.body as User;
-      const { name, level } = req.query;
+      const dbUser: User = {};
 
-      await usersDb.updateOne({ name, level }, { $set: user });
+      if (req.query.name) {
+        dbUser.name = req.query.name as string;
+      }
+
+      if (req.query.level) {
+        dbUser.level = Number(req.query.level);
+      }
+
+      const updateUser = req.body as User;
+
+      const usersCollection = client.db("posts_api").collection("users");
+      await usersCollection.updateOne(dbUser, { $set: updateUser });
 
       res.send({
-        data: user,
+        data: dbUser,
         message: "User successfully updated",
       });
     } catch (e) {
@@ -49,13 +68,21 @@ export default class UserController {
 
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
-      const usersDb = client.db("posts_api").collection("users");
-      const { name, level } = req.query;
+      const deleteUser: User = {};
 
-      const user = await usersDb.deleteOne({ name, level });
+      if (req.query.name) {
+        deleteUser.name = req.query.name as string;
+      }
+
+      if (req.query.level) {
+        deleteUser.level = Number(req.query.level);
+      }
+
+      const usersCollection = client.db("posts_api").collection("users");
+      const deletionData = await usersCollection.deleteOne(deleteUser);
 
       res.send({
-        data: user,
+        data: deletionData,
         message: "User successfully deleted",
       });
     } catch (e) {
