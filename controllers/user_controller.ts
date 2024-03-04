@@ -10,10 +10,10 @@ export default class UserController {
 
       await usersDb.insertOne(user);
 
-      res.send(`
-      User successfully added
-      ${JSON.stringify(user)}
-      `);
+      res.send({
+        data: user,
+        message: "User successfully added",
+      });
     } catch (e) {
       return next(e.message);
     }
@@ -34,13 +34,14 @@ export default class UserController {
     try {
       const usersDb = client.db("posts_api").collection("users");
       const user = req.body as User;
+      const { name, level } = req.query;
 
-      await usersDb.updateOne(req.query, { $set: user });
+      await usersDb.updateOne({ name, level }, { $set: user });
 
-      res.send(`
-      Successfully updated user
-      ${JSON.stringify(user)}
-      `);
+      res.send({
+        data: user,
+        message: "User successfully updated",
+      });
     } catch (e) {
       return next(e.message);
     }
@@ -49,13 +50,14 @@ export default class UserController {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const usersDb = client.db("posts_api").collection("users");
+      const { name, level } = req.query;
 
-      const user = await usersDb.deleteOne(req.query);
+      const user = await usersDb.deleteOne({ name, level });
 
-      res.send(`
-      Successfully deleted user
-      ${JSON.stringify(user)}
-      `);
+      res.send({
+        data: user,
+        message: "User successfully deleted",
+      });
     } catch (e) {
       return next(e.message);
     }
