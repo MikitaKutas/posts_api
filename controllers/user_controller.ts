@@ -1,12 +1,20 @@
 import { User } from "../models/user_model";
 import { client } from "../app";
 import { Request, Response, NextFunction } from 'express';
+import { Collection } from "mongodb";
 
 export default class UserController {
   async addUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const user = req.body as User;
-      const usersCollection = client.db("posts_api").collection("users");
+      const user: User = {};
+
+      if (req.body.name && req.body.level) {
+        user.name = req.body.name as string;
+        user.level = Number(req.body.level);
+      } else {
+        throw new Error("Invalid user structure");
+      }
+      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
 
       await usersCollection.insertOne(user);
 
@@ -31,7 +39,7 @@ export default class UserController {
         user.level = Number(req.query.level);
       }
 
-      const usersCollection = client.db("posts_api").collection("users");
+      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
       const usersArray = await usersCollection.find(user).toArray();
 
       res.send(usersArray);
@@ -54,7 +62,7 @@ export default class UserController {
 
       const updateUser = req.body as User;
 
-      const usersCollection = client.db("posts_api").collection("users");
+      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
       await usersCollection.updateOne(dbUser, { $set: updateUser });
 
       res.send({
@@ -78,7 +86,7 @@ export default class UserController {
         deleteUser.level = Number(req.query.level);
       }
 
-      const usersCollection = client.db("posts_api").collection("users");
+      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
       const deletionData = await usersCollection.deleteOne(deleteUser);
 
       res.send({
