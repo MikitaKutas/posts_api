@@ -1,6 +1,8 @@
 import express from "express";
-import { userRouter } from "./user_router";
+import { usersRouter } from "./users_router";
+import { postsRouter } from "./posts_router";
 
 export const router = express();
 
-router.use('/users', userRouter);
+router.use('/users', usersRouter);
+router.use('/posts', postsRouter);
