@@ -9,7 +9,7 @@ app.use(express.json());
 app.use('/api', router);
 const port = 3000;
 
-export const client = new MongoClient('mongodb://localhost:27017/');
+export const client = new MongoClient('mongodb://mongo:27017/');
 
 async function start() {
   try {
@@ -17,7 +17,7 @@ async function start() {
     console.log("Connection established");
 
     app.listen(port, () => {
-      console.log(`Example app listening on port ${port}`)
+      console.log(`App listening on port ${port}`);
     })
   } catch (e) {
     console.log(e.message)

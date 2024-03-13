@@ -10,4 +10,6 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["node", "app.js"]
+RUN npm run build
+
+CMD ["npm", "run", "start"]
