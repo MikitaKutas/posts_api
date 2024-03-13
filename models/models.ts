@@ -1,12 +1,7 @@
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 
-export interface User {
-  name?: string,
-  level?: number,
-}
+const { Schema } = mongoose;
 
-export interface Post {
-  title?: string,
-  text?: string,
-  userId?: ObjectId,
-}
+const userSchema = new Schema({
+  name: String
+})

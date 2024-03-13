@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Collection } from "mongodb";
 
 export default class UsersController {
-  async addUser(req: Request, res: Response, next: NextFunction) {
+  async post(req: Request, res: Response, next: NextFunction) {
     try {
       const user: User = {};
 
@@ -48,7 +48,7 @@ export default class UsersController {
     }
   }
 
-  async update(req: Request, res: Response, next: NextFunction) {
+  async put(req: Request, res: Response, next: NextFunction) {
     try {
       const dbUser: User = {};
 
