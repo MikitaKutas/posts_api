@@ -4,7 +4,8 @@ import PostsController from "../controllers/posts.controller";
 export const postsRouter = express();
 const postsController = new PostsController();
 
-postsRouter.post('/', postsController.addPost);
-postsRouter.get('/', postsController.get);
-postsRouter.put('/', postsController.update);
-postsRouter.delete('/', postsController.delete);
+postsRouter.post('/:id', postsController.add);
+postsRouter.post('/:id', postsController.get);
+postsRouter.get('/', postsController.getAll);
+postsRouter.put('/:id', postsController.update);
+postsRouter.delete('/:id', postsController.delete);

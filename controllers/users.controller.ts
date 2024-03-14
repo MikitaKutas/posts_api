@@ -1,25 +1,18 @@
-import { User } from "../models/models";
-import { client } from "../app";
-import { Request, Response, NextFunction } from 'express';
-import { Collection } from "mongodb";
+import { Response, NextFunction } from 'express';
+import { AppRequest } from "../interface";
+import { UsersRepository } from '../repositories/users.repository';
+import mongoose from 'mongoose';
+
+const usersRepo = new UsersRepository();
 
 export default class UsersController {
-  async post(req: Request, res: Response, next: NextFunction) {
+  async add(req: AppRequest, res: Response, next: NextFunction) {
     try {
-      const user: User = {};
+      req.user = req.body;
 
-      if (req.body.name && req.body.level) {
-        user.name = req.body.name as string;
-        user.level = Number(req.body.level);
-      } else {
-        throw new Error("Invalid user structure");
-      }
-      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
-
-      await usersCollection.insertOne(user);
-
+      const insertedUser = await usersRepo.addUser(req.user);
       res.send({
-        data: user,
+        data: insertedUser,
         message: "User successfully added",
       });
     } catch (e) {
@@ -27,46 +20,34 @@ export default class UsersController {
     }
   }
 
-  async get(req: Request, res: Response, next: NextFunction) {
+  async get(req: AppRequest, res: Response, next: NextFunction) {
     try {
-      const user: User = {};
-
-      if (req.query.name) {
-        user.name = req.query.name as string;
-      }
-
-      if (req.query.level) {
-        user.level = Number(req.query.level);
-      }
-
-      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
-      const usersArray = await usersCollection.find(user).toArray();
-
-      res.send(usersArray);
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      
+      const foundUser = await usersRepo.findUserById(req.id);
+      res.send(foundUser);
     } catch (e) {
       return next(e.message);
     }
   }
 
-  async put(req: Request, res: Response, next: NextFunction) {
+  async getAll(_: never, res: Response, next: NextFunction) {
     try {
-      const dbUser: User = {};
+      const allUsers = await usersRepo.findAllUsers();
+      res.send(allUsers);
+    } catch (e) {
+      return next(e.message);
+    }
+  }
 
-      if (req.query.name) {
-        dbUser.name = req.query.name as string;
-      }
-
-      if (req.query.level) {
-        dbUser.level = Number(req.query.level);
-      }
-
-      const updateUser = req.body as User;
-
-      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
-      await usersCollection.updateOne(dbUser, { $set: updateUser });
+  async update(req: AppRequest, res: Response, next: NextFunction) {
+    try {
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      req.user = req.body;
+      const updateInfo = await usersRepo.updateUser(req.id, req.user);
 
       res.send({
-        data: dbUser,
+        data: updateInfo,
         message: "User successfully updated",
       });
     } catch (e) {
@@ -74,20 +55,10 @@ export default class UsersController {
     }
   }
 
-  async delete(req: Request, res: Response, next: NextFunction) {
+  async delete(req: AppRequest, res: Response, next: NextFunction) {
     try {
-      const deleteUser: User = {};
-
-      if (req.query.name) {
-        deleteUser.name = req.query.name as string;
-      }
-
-      if (req.query.level) {
-        deleteUser.level = Number(req.query.level);
-      }
-
-      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
-      const deletionData = await usersCollection.deleteOne(deleteUser);
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      const deletionData = await usersRepo.deleteUser(req.id);
 
       res.send({
         data: deletionData,

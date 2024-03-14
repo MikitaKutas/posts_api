@@ -1,37 +1,23 @@
-import { User, Post } from "../models/models";
-import { client } from "../app";
-import { Request, Response, NextFunction } from 'express';
-import { Collection, ObjectId } from "mongodb";
+import { Response, NextFunction } from 'express';
+import { AppRequest } from "../interface";
+import { PostsRepository } from '../repositories/posts.repository';
+import mongoose from 'mongoose';
+
+const postsRepo = new PostsRepository();
 
 export default class PostsController {
-  async addPost(req: Request, res: Response, next: NextFunction) {
+  async add(req: AppRequest, res: Response, next: NextFunction) {
     try {
-      const post: Post = {};
-      let userId: ObjectId;
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      req.post = {
+        title: req.body.title,
+        body: req.body.body,
+        userId: req.id
+      };
 
-      const usersCollection: Collection<User> = client.db("posts_api").collection("users");
-      const postsCollection: Collection<Post> = client.db("posts_api").collection("posts");
-
-      if (req.query.id) {
-        userId = new ObjectId(req.query.id.toString());
-
-        if (req.body.title && req.body.text) {
-          post.title = req.body.title as string;
-          post.text = req.body.text as string;
-          post.userId = userId;
-  
-          const postId:ObjectId = (await postsCollection.insertOne(post)).insertedId;
-  
-          await usersCollection.updateOne({ _id: userId }, {
-            $push: { posts: { _id: postId } }
-          })
-        }
-      } else {
-        throw new Error("Invalid user ID");
-      }
-
+      const insertedPost = await postsRepo.addPost(req.id, req.post);
       res.send({
-        data: post,
+        data: insertedPost,
         message: "Post successfully added",
       });
     } catch (e) {
@@ -39,63 +25,50 @@ export default class PostsController {
     }
   }
 
-  async get(req: Request, res: Response, next: NextFunction) {
+  async get(req: AppRequest, res: Response, next: NextFunction) {
     try {
-      if (req.query.id) {
-        const postsCollection: Collection<Post> = client.db("posts_api").collection("posts");
-
-        const userId: ObjectId = new ObjectId(req.query.id.toString());
-        const postsArray = await postsCollection.find({ userId: userId }).toArray();
-
-        res.send(postsArray);
-      }
-      else {
-        throw new Error("Invalid user ID");
-      }
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      
+      const foundPost = await postsRepo.findPostById(req.id);
+      res.send(foundPost);
     } catch (e) {
       return next(e.message);
     }
   }
 
-  async update(req: Request, res: Response, next: NextFunction) {
+  async getAll(_: never, res: Response, next: NextFunction) {
     try {
-      if (req.query.id) {
-        const postsCollection: Collection<Post> = client.db("posts_api").collection("posts");
-
-        const postId = new ObjectId(req.query.id.toString());
-        const updatePost = req.body as Post;
-
-        const result = await postsCollection.updateOne({ _id : postId }, { $set: updatePost });
-
-        res.send({
-          data: result,
-          message: "Post successfully updated",
-      });
-      }
+      const allPosts = await postsRepo.findAllPosts();
+      res.send(allPosts);
     } catch (e) {
       return next(e.message);
     }
   }
 
-  async delete(req: Request, res: Response, next: NextFunction) {
+  async update(req: AppRequest, res: Response, next: NextFunction) {
     try {
-      if (req.query.id) {
-        const usersCollection: Collection<User> = client.db("posts_api").collection("users");
-        const postsCollection: Collection<Post> = client.db("posts_api").collection("posts");
-        const postId = new ObjectId(req.query.id.toString());
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      req.post = req.body;
+      const updateInfo = await postsRepo.updatePost(req.id, req.post);
 
-        const userId = (await postsCollection.findOne({ _id: postId })).userId;
-        const result = await postsCollection.deleteOne({ _id : postId });
-
-        await usersCollection.updateOne({ _id: userId }, {
-          $pull: { posts: postId }
-        })
-
-        res.send({
-          data: result,
-          message: "Post successfully deleted",
+      res.send({
+        data: updateInfo,
+        message: "Post successfully updated",
       });
-      }
+    } catch (e) {
+      return next(e.message);
+    }
+  }
+
+  async delete(req: AppRequest, res: Response, next: NextFunction) {
+    try {
+      req.id = new mongoose.Types.ObjectId(req.params.id);
+      const deletionData = await postsRepo.deletePost(req.id);
+
+      res.send({
+        data: deletionData,
+        message: "Post successfully deleted",
+      });
     } catch (e) {
       return next(e.message);
     }

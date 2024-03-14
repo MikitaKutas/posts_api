@@ -7,7 +7,7 @@
       "dom"
     ],
     "declaration": false,
-    "sourceMap": false,
+    "sourceMap": true,
     "outDir": "./dist",
     "removeComments": true,
     "moduleResolution": "node",
