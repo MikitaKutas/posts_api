@@ -3,6 +3,7 @@ const { Schema } = mongoose;
 
 export interface User {
   name: string;
+  posts: Post[];
 }
 
 export interface Post {
@@ -15,7 +16,13 @@ const usersSchema = new Schema<User>({
   name: {
     type: String,
     required: true
-  }
+  },
+  posts: [{
+    _id: {
+      type: Schema.Types.ObjectId,
+      ref: 'post'
+    }
+  }]
 },
 {
   versionKey: false

@@ -1,41 +1,27 @@
 import mongoose from "mongoose";
-import { User, UsersCollection, Post, PostsCollection } from "../models/models";
+import { UsersCollection, Post, PostsCollection } from "../models/models";
+import { client } from "../app";
 
 export class PostsRepository {
 
-  async addPost(userId: mongoose.Types.ObjectId, post: Post) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+  async addPost(post: Post) {
+    const session = await client.startSession();
 
-    try {
-      const dbPost = await PostsCollection.create(post);
+    return session.withTransaction(async (session) => {
+      const dbPost = await PostsCollection.create([post], { session });
 
-      if (!dbPost) {
-        throw new Error("Post is not saved");
-      }
-
-      console.log(dbPost._id);
-      const userInfo = await UsersCollection.findByIdAndUpdate(
-        userId,
+      await UsersCollection.findByIdAndUpdate(
+        post.userId,
         {
           $push: {
-            posts: { _id: dbPost._id }
+            posts: { _id: dbPost[0]._id }
           }
         },
         { session }
       );
 
-      console.log(userInfo.toJSON());
-
-      await session.commitTransaction();
-
-      return dbPost.toJSON();
-    } catch(e) {
-      await session.abortTransaction();
-      throw new Error("Post is not saved");
-    } finally {
-      session.endSession();
-    }
+      return dbPost[0].toJSON();
+    }, null)
   }
 
   async findPostById(postId: mongoose.Types.ObjectId) {
@@ -59,7 +45,7 @@ export class PostsRepository {
   }
 
   async updatePost(postId: mongoose.Types.ObjectId, updatePost: Post) {
-    const updateData = await PostsCollection.findByIdAndUpdate(postId, { $set: updatePost });
+    const updateData = await PostsCollection.findByIdAndUpdate(postId, { $set: updatePost }, { new: true });
 
     if (!updateData) {
       throw new Error("Post is not updated");
@@ -69,10 +55,9 @@ export class PostsRepository {
   }
 
   async deletePost(postId: mongoose.Types.ObjectId) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const session = await client.startSession();
 
-    try {
+    return session.withTransaction(async (session) => {
       const dbPost = await PostsCollection.findByIdAndDelete(postId);
 
       if (!dbPost) {
@@ -80,24 +65,16 @@ export class PostsRepository {
       }
 
       await UsersCollection.findByIdAndUpdate(
-        dbPost.userId,
+       dbPost.userId,
         {
           $pull: {
-            posts: postId
+            posts: { _id: dbPost._id }
           }
         },
         { session }
       );
 
-      await session.commitTransaction();
-
       return dbPost.toJSON();
-    } catch(e) {
-      await session.abortTransaction();
-      throw new Error("Post is not deleted");
-    } finally {
-      session.endSession();
-    }
+    }, null)
   }
-  
 }

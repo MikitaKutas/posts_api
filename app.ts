@@ -9,16 +9,16 @@ app.use(express.json());
 app.use('/api', router);
 const port = 3000;
 
-async function start() {
+function start() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/posts_api');
+    mongoose.connect('mongodb://mongo/?replicaSet=rs0');
     app.listen(port, () => {
       console.log(`App listening on port ${port}`);
     })
 
-    return mongoose;
+    return mongoose.connection.useDb('posts_api');
   } catch (e) {
-    console.log(e.message)
+    console.log(e.message);
   }
 }
 

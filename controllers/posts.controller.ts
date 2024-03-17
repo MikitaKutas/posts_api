@@ -9,13 +9,17 @@ export default class PostsController {
   async add(req: AppRequest, res: Response, next: NextFunction) {
     try {
       req.id = new mongoose.Types.ObjectId(req.params.id);
+
       req.post = {
         title: req.body.title,
         body: req.body.body,
         userId: req.id
       };
 
-      const insertedPost = await postsRepo.addPost(req.id, req.post);
+      const insertedPost = await postsRepo.addPost(req.post);
+
+      console.log(insertedPost);
+
       res.send({
         data: insertedPost,
         message: "Post successfully added",
